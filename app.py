@@ -19,7 +19,10 @@ load_dotenv()
 # luego archivo .env (para local)
 HF_TOKEN = os.getenv("HF_TOKEN", os.getenv("HUGGINGFACE_TOKEN", ""))
 
+# Cache de modelos en memoria
 MODEL_CACHE = {}
+DEVICE = None
+COMPUTE_TYPE = None
 
 
 def format_timestamp(seconds):
@@ -32,17 +35,26 @@ def format_timestamp(seconds):
 
 
 def get_device():
-    if torch.cuda.is_available():
-        return "cuda", "float16"
-    return "cpu", "int8"
+    global DEVICE, COMPUTE_TYPE
+    if DEVICE is None:
+        if torch.cuda.is_available():
+            DEVICE = "cuda"
+            COMPUTE_TYPE = "float16"
+        else:
+            DEVICE = "cpu"
+            COMPUTE_TYPE = "int8"
+    return DEVICE, COMPUTE_TYPE
 
 
-def get_model(model_name, device, compute_type):
+def get_model(model_name):
+    device, compute_type = get_device()
     key = f"{model_name}_{device}_{compute_type}"
     if key not in MODEL_CACHE:
+        print(f"[INFO] Cargando modelo {model_name} en {device}...")
         MODEL_CACHE[key] = whisperx.load_model(
             model_name, device=device, compute_type=compute_type
         )
+        print(f"[INFO] Modelo {model_name} cargado.")
     return MODEL_CACHE[key]
 
 
@@ -73,9 +85,9 @@ def convert_to_wav(input_path):
         if os.path.exists(out_path):
             return out_path
     except subprocess.CalledProcessError as e:
-        print(f"ffmpeg error: {e.stderr}")
+        print(f"[WARN] ffmpeg error: {e.stderr}")
     except FileNotFoundError:
-        print("ffmpeg no encontrado")
+        print("[WARN] ffmpeg no encontrado, usando fallback")
 
     # Fallback con soundfile
     try:
@@ -90,7 +102,7 @@ def convert_to_wav(input_path):
         if os.path.exists(out_path):
             return out_path
     except Exception as e:
-        print(f"soundfile fallback error: {e}")
+        print(f"[WARN] soundfile fallback error: {e}")
 
     return None
 
@@ -134,7 +146,7 @@ def transcribe_audio(file_obj, model_name, language, num_speakers, hf_token):
             return "Error: No se pudo convertir el audio a WAV. Asegurate de que ffmpeg este instalado.", None
 
         device, compute_type = get_device()
-        model = get_model(model_name, device, compute_type)
+        model = get_model(model_name)
 
         audio = whisperx.load_audio(wav_path)
         result = model.transcribe(audio, language=language if language else None)
@@ -293,4 +305,4 @@ with gr.Blocks(title="Transcriptor de Audio con Diarizacion") as app:
     )
 
 if __name__ == "__main__":
-    app.launch(server_name="0.0.0.0", server_port=7860)
+    app.launch()

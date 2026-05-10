@@ -11,15 +11,10 @@ import numpy as np
 import soundfile as sf
 import torch
 import whisperx
-from dotenv import load_dotenv
 
-load_dotenv()
-
-# Lee token de HuggingFace: primero variable de entorno (para Spaces/Cloud),
-# luego archivo .env (para local)
+# Token de admin (para el Space owner) - opcional si se configura en Secrets
 HF_TOKEN = os.getenv("HF_TOKEN", os.getenv("HUGGINGFACE_TOKEN", ""))
 
-# Cache de modelos en memoria
 MODEL_CACHE = {}
 DEVICE = None
 COMPUTE_TYPE = None
@@ -89,7 +84,6 @@ def convert_to_wav(input_path):
     except FileNotFoundError:
         print("[WARN] ffmpeg no encontrado, usando fallback")
 
-    # Fallback con soundfile
     try:
         data, sr = sf.read(input_path)
         if data.ndim > 1:
@@ -107,7 +101,7 @@ def convert_to_wav(input_path):
     return None
 
 
-def transcribe_audio(file_obj, model_name, language, num_speakers, hf_token):
+def transcribe_audio(request: gr.Request, file_obj, model_name, language, num_speakers):
     if file_obj is None:
         return "Error: No se ha subido ningun archivo.", None
 
@@ -122,28 +116,28 @@ def transcribe_audio(file_obj, model_name, language, num_speakers, hf_token):
     if not os.path.exists(audio_path):
         return f"Error: El archivo no existe: {audio_path}", None
 
-    if not hf_token and HF_TOKEN:
-        hf_token = HF_TOKEN
+    # Obtener token OAuth del usuario autenticado
+    user_token = None
+    if request and hasattr(request, 'headers') and request.headers.get("authorization"):
+        user_token = request.headers.get("authorization").replace("Bearer ", "")
+    
+    # Fallback a token de admin (Secrets) si no hay usuario autenticado
+    hf_token = user_token if user_token else HF_TOKEN
 
     if not hf_token:
         return (
-            "Error: Necesitas un token de HuggingFace para la diarizacion.\n\n"
-            "Para Hugging Face Spaces:\n"
-            "1. Ve a Settings > Secrets de tu Space\n"
-            "2. Crea una variable HF_TOKEN con tu token\n\n"
-            "Para uso local:\n"
-            "1. Crea una cuenta en https://huggingface.co/\n"
-            "2. Acepta los terminos en:\n"
-            "   - https://huggingface.co/pyannote/speaker-diarization-3.1\n"
-            "   - https://huggingface.co/pyannote/segmentation-3.0\n"
-            "3. Crea un token en https://huggingface.co/settings/tokens",
+            "Error: Necesitas iniciar sesion con Hugging Face para usar la diarizacion.\n\n"
+            "Haz clic en el boton 'Iniciar sesion con Hugging Face' arriba y acepta los permisos.\n\n"
+            "Tambien debes aceptar los terminos de uso en:\n"
+            "- https://huggingface.co/pyannote/speaker-diarization-3.1\n"
+            "- https://huggingface.co/pyannote/segmentation-3.0",
             None,
         )
 
     try:
         wav_path = convert_to_wav(audio_path)
         if wav_path is None:
-            return "Error: No se pudo convertir el audio a WAV. Asegurate de que ffmpeg este instalado.", None
+            return "Error: No se pudo convertir el audio a WAV.", None
 
         device, compute_type = get_device()
         model = get_model(model_name)
@@ -255,6 +249,10 @@ with gr.Blocks(title="Transcriptor de Audio con Diarizacion") as app:
     )
 
     with gr.Row():
+        gr.LoginButton("Iniciar sesion con Hugging Face", variant="primary")
+        gr.LogoutButton("Cerrar sesion", variant="secondary")
+
+    with gr.Row():
         with gr.Column(scale=1):
             file_input = gr.File(
                 label="Archivo de Audio",
@@ -276,12 +274,6 @@ with gr.Blocks(title="Transcriptor de Audio con Diarizacion") as app:
                 label="Numero de interlocutores (0 = auto)",
                 precision=0,
             )
-            hf_token_input = gr.Textbox(
-                value=HF_TOKEN,
-                label="Token de HuggingFace (opcional si esta en secrets)",
-                type="password",
-                info="Necesario para la diarizacion",
-            )
             transcribe_btn = gr.Button("Transcribir", variant="primary")
 
         with gr.Column(scale=2):
@@ -299,7 +291,6 @@ with gr.Blocks(title="Transcriptor de Audio con Diarizacion") as app:
             model_dropdown,
             language_dropdown,
             num_speakers,
-            hf_token_input,
         ],
         outputs=[output_text, output_file],
     )

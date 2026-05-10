@@ -1,7 +1,7 @@
 whisperx
 gradio>=4.0.0
-python-dotenv
 torch
 torchaudio
 soundfile
 scipy
+python-dotenv

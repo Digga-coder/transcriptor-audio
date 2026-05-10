@@ -1,4 +1,15 @@
-# Transcriptor de Audio con Diarizacion
+---
+title: Transcriptor de Audio con Diarizacion
+emoji: 🎙️
+colorFrom: blue
+colorTo: purple
+sdk: gradio
+sdk_version: 5.0.0
+app_file: app.py
+pinned: false
+---
+
+# Transcriptor de Audio con Identificacion de Interlocutores
 
 Aplicacion web para transcribir archivos de audio identificando automaticamente a cada interlocutor.
 
@@ -10,73 +21,21 @@ Aplicacion web para transcribir archivos de audio identificando automaticamente 
 - **Interfaz web** con Gradio
 - **Soporte multi-idioma** (auto-deteccion o manual)
 - **Descarga** de transcripcion en formato texto
+- **Autenticacion OAuth** con Hugging Face (sin tokens manuales)
 
-## Despliegue en Hugging Face Spaces (Recomendado)
+## Uso
 
-### 1. Crea el Space
+1. Inicia sesion con tu cuenta de Hugging Face (boton arriba)
+2. Sube un archivo de audio (MP3, WAV, M4A, etc.)
+3. Selecciona modelo e idioma
+4. Haz clic en "Transcribir"
+5. Descarga la transcripcion como .txt
 
-1. Ve a [huggingface.co/new-space](https://huggingface.co/new-space)
-2. **Space name:** `transcriptor-audio`
-3. **SDK:** `Gradio`
-4. **Hardware:** `CPU Basic` (gratis, siempre online) o `ZeroGPU` (GPU gratis 2h/dia)
-5. Crea el Space
+## Requisitos previos
 
-### 2. Configura el token
-
-1. En tu Space, ve a **Settings > Secrets**
-2. Añade una variable:
-   - **Name:** `HF_TOKEN`
-   - **Value:** tu token de HuggingFace
-3. Guarda
-
-### 3. Sube el codigo
-
-En la pestaña **Files** de tu Space:
-- Sube `app.py`
-- Sube `requirements.txt`
-- Sube `.gitattributes`
-
-O conecta tu cuenta de GitHub y selecciona este repositorio.
-
-### 4. Reinicia el Space
-
-Ve a **Settings > Factory Reboot** para que se instalen las dependencias.
-
-**URL final:** `https://TU-USUARIO-transcriptor-audio.hf.space`
-
-## Opciones de hardware
-
-| Hardware | Coste | GPU | Tiempo limite | Recomendacion |
-|----------|-------|-----|---------------|---------------|
-| **CPU Basic** | Gratis | No | Ninguno | **Recomendado** para uso continuo |
-| **ZeroGPU** | Gratis | A100 | 60-180s/request | Para audios cortos y modelos pequenos |
-| **GPU T4** | Pago | T4 | Ninguno | Para uso profesional |
-
-**Nota sobre ZeroGPU:** Tiene timeout. Para audios largos (>10 min) con `large-v3`, usa **CPU Basic**. Para audios cortos (<5 min) con modelos `small` o `base`, ZeroGPU es mas rapido.
-
-## Uso local
-
-```bash
-# Requisitos: Python 3.10+, ffmpeg
-pip install -r requirements.txt
-
-# Crea un archivo .env con tu token:
-echo "HF_TOKEN=tu_token_aqui" > .env
-
-python app.py
-# Abre http://localhost:7860
-```
-
-## Tokens y Permisos necesarios
-
-Para usar la diarizacion (identificar interlocutores) necesitas:
-
-1. **HuggingFace Token** con permisos de `read`
-2. Haber aceptado los terminos de:
-   - [pyannote/speaker-diarization-3.1](https://huggingface.co/pyannote/speaker-diarization-3.1)
-   - [pyannote/segmentation-3.0](https://huggingface.co/pyannote/segmentation-3.0)
-
-Sin token, la transcripcion funciona pero NO identifica interlocutores.
+Debes haber aceptado los terminos de uso en:
+- https://huggingface.co/pyannote/speaker-diarization-3.1
+- https://huggingface.co/pyannote/segmentation-3.0
 
 ## Modelos disponibles
 
@@ -89,33 +48,12 @@ Sin token, la transcripcion funciona pero NO identifica interlocutores.
 | base | Baja | Muy rapida | Ultra rapida | ~1GB |
 | tiny | Baja | Ultra rapida | Instantanea | ~0.5GB |
 
-**Recomendacion CPU Basic:** `small` o `base`
-**Recomendacion ZeroGPU:** `small` o `medium`
+## Stack tecnico
 
-## Arquitectura
-
-```
-Usuario
-  |
-  v
-Gradio Web UI (Python)
-  |
-  v
-WhisperX Pipeline
-  |-- Whisper (transcripcion)
-  |-- CTC Forced Alignment (timestamps palabra)
-  |-- pyannote.audio (diarizacion - quien habla)
-  |
-  v
-Salida: Transcripcion con timestamps y speakers
-```
-
-**Stack tecnico:**
-- **Frontend:** Gradio (auto-generado)
+- **Frontend:** Gradio
 - **Backend:** Python 3.10
 - **ML:** PyTorch + WhisperX + pyannote.audio
 - **Audio:** ffmpeg + soundfile
-- **Hosting:** Hugging Face Spaces
 
 ## Licencia
 

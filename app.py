@@ -253,9 +253,9 @@ with gr.Blocks(title="Transcriptor de Audio con Diarizacion") as app:
             )
             model_dropdown = gr.Dropdown(
                 choices=MODEL_OPTIONS,
-                value="base",
+                value="large-v3",
                 label="Modelo Whisper",
-                info="Base = rapido en CPU. Large = mejor calidad pero necesita GPU.",
+                info="Large-v3 = maxima calidad (usa GPU). Base = mas rapido en CPU.",
             )
             language_dropdown = gr.Dropdown(
                 choices=LANGUAGE_OPTIONS,

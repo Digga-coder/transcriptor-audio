@@ -250,7 +250,6 @@ with gr.Blocks(title="Transcriptor de Audio con Diarizacion") as app:
 
     with gr.Row():
         gr.LoginButton("Iniciar sesion con Hugging Face", variant="primary")
-        gr.LogoutButton("Cerrar sesion", variant="secondary")
 
     with gr.Row():
         with gr.Column(scale=1):

@@ -1,6 +1,6 @@
 whisperx
 gradio>=4.0.0
-pyaudioop
+audioop-lts
 torch
 torchaudio
 soundfile

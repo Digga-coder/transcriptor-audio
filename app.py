@@ -101,7 +101,7 @@ def convert_to_wav(input_path):
     return None
 
 
-def transcribe_audio(request: gr.Request, file_obj, model_name, language, num_speakers):
+def transcribe_audio(file_obj, model_name, language, num_speakers, hf_token):
     if file_obj is None:
         return "Error: No se ha subido ningun archivo.", None
 
@@ -116,21 +116,18 @@ def transcribe_audio(request: gr.Request, file_obj, model_name, language, num_sp
     if not os.path.exists(audio_path):
         return f"Error: El archivo no existe: {audio_path}", None
 
-    # Obtener token OAuth del usuario autenticado
-    user_token = None
-    if request and hasattr(request, 'headers') and request.headers.get("authorization"):
-        user_token = request.headers.get("authorization").replace("Bearer ", "")
-    
-    # Fallback a token de admin (Secrets) si no hay usuario autenticado
-    hf_token = user_token if user_token else HF_TOKEN
+    if not hf_token and HF_TOKEN:
+        hf_token = HF_TOKEN
 
     if not hf_token:
         return (
-            "Error: Necesitas iniciar sesion con Hugging Face para usar la diarizacion.\n\n"
-            "Haz clic en el boton 'Iniciar sesion con Hugging Face' arriba y acepta los permisos.\n\n"
-            "Tambien debes aceptar los terminos de uso en:\n"
-            "- https://huggingface.co/pyannote/speaker-diarization-3.1\n"
-            "- https://huggingface.co/pyannote/segmentation-3.0",
+            "Error: Necesitas un token de HuggingFace para la diarizacion.\n\n"
+            "1. Ve a https://huggingface.co/settings/tokens\n"
+            "2. Crea un token con permiso 'read'\n"
+            "3. Acepta los terminos en:\n"
+            "   - https://huggingface.co/pyannote/speaker-diarization-3.1\n"
+            "   - https://huggingface.co/pyannote/segmentation-3.0\n"
+            "4. Pega el token arriba",
             None,
         )
 
@@ -249,9 +246,6 @@ with gr.Blocks(title="Transcriptor de Audio con Diarizacion") as app:
     )
 
     with gr.Row():
-        gr.LoginButton("Iniciar sesion con Hugging Face", variant="primary")
-
-    with gr.Row():
         with gr.Column(scale=1):
             file_input = gr.File(
                 label="Archivo de Audio",
@@ -273,6 +267,12 @@ with gr.Blocks(title="Transcriptor de Audio con Diarizacion") as app:
                 label="Numero de interlocutores (0 = auto)",
                 precision=0,
             )
+            hf_token_input = gr.Textbox(
+                value=HF_TOKEN,
+                label="Token de HuggingFace",
+                type="password",
+                info="Necesario para la diarizacion",
+            )
             transcribe_btn = gr.Button("Transcribir", variant="primary")
 
         with gr.Column(scale=2):
@@ -290,6 +290,7 @@ with gr.Blocks(title="Transcriptor de Audio con Diarizacion") as app:
             model_dropdown,
             language_dropdown,
             num_speakers,
+            hf_token_input,
         ],
         outputs=[output_text, output_file],
     )

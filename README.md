@@ -4,7 +4,7 @@ emoji: 🎙️
 colorFrom: blue
 colorTo: purple
 sdk: gradio
-sdk_version: 5.0.0
+python_version: "3.10"
 app_file: app.py
 pinned: false
 ---
@@ -21,13 +21,12 @@ Aplicacion web para transcribir archivos de audio identificando automaticamente 
 - **Interfaz web** con Gradio
 - **Soporte multi-idioma** (auto-deteccion o manual)
 - **Descarga** de transcripcion en formato texto
-- **Autenticacion OAuth** con Hugging Face (sin tokens manuales)
 
 ## Uso
 
-1. Inicia sesion con tu cuenta de Hugging Face (boton arriba)
-2. Sube un archivo de audio (MP3, WAV, M4A, etc.)
-3. Selecciona modelo e idioma
+1. Sube un archivo de audio (MP3, WAV, M4A, etc.)
+2. Selecciona modelo e idioma
+3. Introduce tu token de HuggingFace (necesario para diarizacion)
 4. Haz clic en "Transcribir"
 5. Descarga la transcripcion como .txt
 
@@ -39,14 +38,14 @@ Debes haber aceptado los terminos de uso en:
 
 ## Modelos disponibles
 
-| Modelo | Precision | Velocidad CPU | Velocidad GPU | VRAM |
-|--------|-----------|---------------|---------------|------|
-| large-v3 | Alta | Lenta | Media | ~10GB |
-| large-v2 | Alta | Lenta | Media | ~10GB |
-| medium | Media | Media | Rapida | ~5GB |
-| small | Media | Rapida | Muy rapida | ~2GB |
-| base | Baja | Muy rapida | Ultra rapida | ~1GB |
-| tiny | Baja | Ultra rapida | Instantanea | ~0.5GB |
+| Modelo | Precision | Velocidad CPU | VRAM |
+|--------|-----------|---------------|------|
+| large-v3 | Alta | Lenta | ~10GB |
+| large-v2 | Alta | Lenta | ~10GB |
+| medium | Media | Media | ~5GB |
+| small | Media | Rapida | ~2GB |
+| base | Baja | Muy rapida | ~1GB |
+| tiny | Baja | Ultra rapida | ~0.5GB |
 
 ## Stack tecnico
 

@@ -1,6 +1,4 @@
 whisperx
-gradio>=4.0.0
-audioop-lts
 torch
 torchaudio
 soundfile

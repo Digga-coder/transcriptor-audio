@@ -1,6 +1,5 @@
 whisperx
-torch
-torchaudio
+gradio>=4.0.0
 soundfile
 scipy
 python-dotenv

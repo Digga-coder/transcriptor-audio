@@ -1,5 +1,9 @@
 whisperx
+torch==2.5.1+cu121
+torchaudio==2.5.1+cu121
+--index-url https://download.pytorch.org/whl/cu121
 gradio>=4.0.0
 soundfile
 scipy
 python-dotenv
+openpyxl
